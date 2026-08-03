@@ -18,6 +18,7 @@
         <button class="btn-secondary" id="btn-open-new">打开其他电子书</button>
       </div>
       <button class="btn-secondary" id="btn-check-update">✨ 检查更新</button>
+      <button class="btn-secondary" id="btn-about">ℹ️ 关于</button>
     </div>
   </header>
 
@@ -129,6 +130,45 @@
       <div class="modal-footer">
         <button class="btn-secondary" id="btn-cancel-update">稍后再说</button>
         <button class="btn-primary" id="btn-start-update">立即升级</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关于软件弹窗 Modal -->
+  <div id="about-modal" class="modal-backdrop hidden">
+    <div class="modal-card about-card">
+      <div class="modal-header">
+        <div class="modal-title">关于 MetaEpub</div>
+        <button id="btn-close-about-modal" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body about-body">
+        <div class="about-app-brand">
+          <div class="about-logo">📚</div>
+          <div class="about-app-name">MetaEpub</div>
+          <span class="about-app-version">v0.1.0</span>
+        </div>
+        <p class="about-description">
+          MetaEpub 是一款轻量、现代化的 EPUB 电子书元数据编辑器。支持便捷修改书名、作者、语言、出版商、出版日期、描述信息与标识符，并支持在线替换封面与离线导出打包。
+        </p>
+        <div class="about-tags">
+          <span class="about-tag">Tauri v2</span>
+          <span class="about-tag">Rust</span>
+          <span class="about-tag">JavaScript</span>
+          <span class="about-tag">Vite</span>
+        </div>
+        <div class="about-meta-list">
+          <div class="about-meta-item">
+            <span class="about-meta-label">开源项目：</span>
+            <a href="https://github.com/mangerle/MetaEpub" id="about-repo-link" class="about-link" target="_blank">github.com/mangerle/MetaEpub</a>
+          </div>
+          <div class="about-meta-item">
+            <span class="about-meta-label">运行环境：</span>
+            <span id="about-env-text">Tauri 桌面客户端 (Windows / macOS / Linux)</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" id="btn-confirm-about">确定</button>
       </div>
     </div>
   </div>

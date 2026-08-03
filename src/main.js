@@ -310,3 +310,24 @@ function initUpdater() {
 // 启动更新控制器
 initUpdater();
 
+// 关于弹窗控制
+function initAboutModal() {
+  const btnAbout = document.getElementById('btn-about');
+  const aboutModal = document.getElementById('about-modal');
+  const btnCloseAbout = document.getElementById('btn-close-about-modal');
+  const btnConfirmAbout = document.getElementById('btn-confirm-about');
+
+  const closeAboutModal = () => {
+    aboutModal?.classList.add('hidden');
+  };
+
+  btnAbout?.addEventListener('click', () => {
+    aboutModal?.classList.remove('hidden');
+  });
+
+  btnCloseAbout?.addEventListener('click', closeAboutModal);
+  btnConfirmAbout?.addEventListener('click', closeAboutModal);
+}
+
+initAboutModal();
+
