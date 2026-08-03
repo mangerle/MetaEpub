@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MetaEpub - EPUB元数据编辑器</title>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <!-- Header 导航 -->
+  <header>
+    <div class="logo-area">
+      <div class="logo-icon">📚</div>
+      <div class="logo-title">MetaEpub</div>
+    </div>
+    <div class="header-right">
+      <div id="header-actions" class="hidden">
+        <button class="btn-secondary" id="btn-open-new">打开其他电子书</button>
+      </div>
+      <button class="btn-secondary" id="btn-check-update">✨ 检查更新</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- 空状态：拖拽/选择文件 -->
+    <div id="drop-zone" class="drop-zone">
+      <div class="drop-icon">📖</div>
+      <div class="drop-title">拖拽 EPUB 文件到此处</div>
+      <div class="drop-subtitle">或者点击此处选择电脑中的 .epub 电子书</div>
+    </div>
+
+    <!-- 编辑器区域 (默认隐藏) -->
+    <div id="editor-section" class="editor-layout hidden">
+      <!-- 左侧：封面与文件信息 -->
+      <div class="card sidebar-section">
+        <div class="cover-wrapper" id="cover-wrapper">
+          <div class="cover-placeholder" id="cover-placeholder">暂无封面</div>
+          <img id="cover-img" class="hidden" alt="封面预览">
+        </div>
+        <button class="btn-secondary" id="btn-change-cover">更换封面图片</button>
+        <div class="file-info" id="file-name-display">文件名: -</div>
+      </div>
+
+      <!-- 右侧：元数据表单 -->
+      <div class="card">
+        <form id="metadata-form">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="input-title">书名 (Title)</label>
+              <input type="text" id="input-title" placeholder="例如：三体">
+            </div>
+
+            <div class="form-group">
+              <label for="input-creator">作者 (Author)</label>
+              <input type="text" id="input-creator" placeholder="例如：刘慈欣">
+            </div>
+
+            <div class="form-group">
+              <label for="input-language">语言 (Language)</label>
+              <input type="text" id="input-language" placeholder="例如：zh-CN / en">
+            </div>
+
+            <div class="form-group">
+              <label for="input-publisher">出版商 (Publisher)</label>
+              <input type="text" id="input-publisher" placeholder="例如：重庆出版社">
+            </div>
+
+            <div class="form-group">
+              <label for="input-date">出版日期 (Date)</label>
+              <input type="text" id="input-date" placeholder="例如：2008-01-01">
+            </div>
+
+            <div class="form-group full-width">
+              <label for="input-identifier">标识符 (ISBN / UUID)</label>
+              <input type="text" id="input-identifier" placeholder="例如：9787536692930">
+            </div>
+
+            <div class="form-group full-width">
+              <label for="input-description">书籍简介 / 描述 (Description)</label>
+              <textarea id="input-description" placeholder="请输入电子书的简介或描述内容..."></textarea>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="input-filename">导出文件名 (Export Filename)</label>
+              <input type="text" id="input-filename" placeholder="例如：my_book.epub">
+            </div>
+          </div>
+
+          <div class="actions-bar">
+            <button type="button" class="btn-secondary" id="btn-reset">重置修改</button>
+            <button type="submit" class="btn-primary" id="btn-save">保存并导出 EPUB</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- 隐藏的文件选择输入框 -->
+  <input type="file" id="file-input" accept=".epub" class="hidden">
+  <input type="file" id="cover-input" accept="image/*" class="hidden">
+
+  <!-- 自动更新弹窗 Modal -->
+  <div id="update-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">🚀 发现新版本</div>
+        <button id="btn-close-update-modal" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="version-badge-container">
+          <span class="version-badge current" id="update-current-ver">v0.1.0</span>
+          <span class="version-arrow">➔</span>
+          <span class="version-badge latest" id="update-latest-ver">v0.2.0</span>
+        </div>
+        <div class="update-notes-title">更新说明：</div>
+        <div class="update-notes-content" id="update-notes">解析版本日志中...</div>
+        
+        <!-- 下载进度区域 (默认隐藏) -->
+        <div id="update-progress-container" class="update-progress-container hidden">
+          <div class="progress-info">
+            <span id="update-status-text">正在准备下载...</span>
+            <span id="update-percent-text">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="update-progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-cancel-update">稍后再说</button>
+        <button class="btn-primary" id="btn-start-update">立即升级</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提示 Toast 消息 -->
+  <div id="toast" class="toast hidden">
+    <span id="toast-message"></span>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
