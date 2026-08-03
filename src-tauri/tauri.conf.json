@@ -36,7 +36,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IGF1dG9tYXRpYyB1cGRhdGVyIGtleQpSV1N5T2pEQWdGSEpTbm4zUytvMStzL3QvbERmdm1aOHJ1SGNuMnVydmlydkJtdStyZThkTHh2cgo=",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDgwM0Q3QzM0NjU1ODA0RjMKUldUekJGaGxOSHc5Z09GOTRiUks5cmhwSGx0RUFNK0o2Z2tIUGNJVXZqZXhKc3Z2N1NwdGYwd3UK",
       "endpoints": [
         "https://github.com/mangerle/MetaEpub/releases/latest/download/latest.json"
       ]
