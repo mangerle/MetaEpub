@@ -52,3 +52,99 @@ jobs:
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
+
+  generate-updater-json:
+    needs: build-tauri
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate and Upload latest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          node -e '
+          const fs = require("fs");
+          const { execSync } = require("child_process");
+
+          const tag = process.env.TAG_NAME;
+          const version = tag.replace(/^v/, "");
+
+          console.log(`Generating latest.json for tag ${tag} (version ${version})...`);
+
+          try {
+            const releaseInfoJson = execSync(`gh release view ${tag} --json assets`, { encoding: "utf8" });
+            const assets = JSON.parse(releaseInfoJson).assets || [];
+
+            console.log("Release assets found:", assets.map(a => a.name));
+
+            const platforms = {};
+
+            for (const asset of assets) {
+              const name = asset.name;
+              const url = asset.url;
+
+              if (name.endsWith(".sig")) {
+                const baseName = name.slice(0, -4);
+                let sigContent = "";
+                try {
+                  sigContent = execSync(`curl -sL "${url}"`, { encoding: "utf8" }).trim();
+                } catch (e) {
+                  console.warn(`Failed to fetch sig for ${name}:`, e.message);
+                }
+
+                const matchingAsset = assets.find(a => a.name === baseName || a.name === baseName + ".zip" || a.name === baseName + ".tar.gz");
+                const targetUrl = matchingAsset ? matchingAsset.url : url.slice(0, -4);
+
+                if (name.includes("x64") || name.includes("amd64") || name.includes("nsis") || name.includes("msi") || name.includes("exe")) {
+                  platforms["windows-x86_64"] = { signature: sigContent, url: targetUrl };
+                } else if (name.includes("aarch64")) {
+                  platforms["darwin-aarch64"] = { signature: sigContent, url: targetUrl };
+                } else if (name.includes("AppImage") || name.includes("deb") || name.includes("rpm")) {
+                  platforms["linux-x86_64"] = { signature: sigContent, url: targetUrl };
+                }
+              }
+            }
+
+            if (Object.keys(platforms).length === 0) {
+              for (const asset of assets) {
+                const name = asset.name;
+                const url = asset.url;
+                if (name.endsWith(".exe") || name.endsWith(".msi") || name.endsWith(".zip")) {
+                  platforms["windows-x86_64"] = { signature: "", url: url };
+                } else if (name.endsWith(".dmg") || (name.includes("aarch64") && name.endsWith(".tar.gz"))) {
+                  platforms["darwin-aarch64"] = { signature: "", url: url };
+                } else if (name.endsWith(".AppImage") || name.endsWith(".deb") || name.endsWith(".rpm")) {
+                  platforms["linux-x86_64"] = { signature: "", url: url };
+                }
+              }
+            }
+
+            const latestJsonData = {
+              version: version,
+              notes: `EPUB 元数据编辑器 ${tag} 自动构建版本。`,
+              pub_date: new Date().toISOString(),
+              platforms: platforms
+            };
+
+            console.log("Generated latest.json content:\n", JSON.stringify(latestJsonData, null, 2));
+
+            fs.writeFileSync("latest.json", JSON.stringify(latestJsonData, null, 2));
+
+            execSync(`gh release upload ${tag} latest.json --clobber`);
+            console.log("Successfully uploaded latest.json to GitHub Release!");
+          } catch (err) {
+            console.error("Error generating latest.json:", err);
+            process.exit(1);
+          }
+          '
+
