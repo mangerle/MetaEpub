@@ -49,5 +49,5 @@ jobs:
           tagName: v__VERSION__
           releaseName: "EPUB 元数据编辑器 v__VERSION__"
           releaseBody: "自动化打包的桌面端应用程序发布包 (Windows / macOS / Linux)。"
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
