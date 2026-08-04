@@ -12,6 +12,7 @@ const messages = {
     'app.settings': '⚙️ 设置',
     'app.checkUpdate': '✨ 检查更新',
     'app.about': 'ℹ️ 关于',
+    'app.more': '⋯ 更多',
 
     // 拖拽区
     'drop.title': '拖拽 EPUB 文件到此处',
@@ -138,6 +139,7 @@ const messages = {
     'app.settings': '⚙️ Settings',
     'app.checkUpdate': '✨ Check Update',
     'app.about': 'ℹ️ About',
+    'app.more': '⋯ More',
 
     'drop.title': 'Drag an EPUB file here',
     'drop.subtitle': 'Or click to select an .epub file',

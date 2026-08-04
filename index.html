@@ -26,8 +26,13 @@
         <option value="en">English</option>
       </select>
       <button class="btn-secondary" id="btn-settings" data-i18n="app.settings">⚙️ 设置</button>
-      <button class="btn-secondary" id="btn-check-update" data-i18n="app.checkUpdate">✨ 检查更新</button>
-      <button class="btn-secondary" id="btn-about" data-i18n="app.about">ℹ️ 关于</button>
+      <div class="recent-dropdown" id="more-dropdown">
+        <button class="btn-secondary" id="btn-more" data-i18n="app.more">⋯ 更多</button>
+        <div class="recent-menu hidden" id="more-menu">
+          <div class="recent-item" id="btn-check-update" data-i18n="app.checkUpdate">✨ 检查更新</div>
+          <div class="recent-item" id="btn-about" data-i18n="app.about">ℹ️ 关于</div>
+        </div>
+      </div>
     </div>
   </header>
 

@@ -723,6 +723,22 @@ initAboutModal();
 initRecentMenu();
 initSettings();
 
+// 更多菜单：检查更新 / 关于
+function initMoreMenu() {
+  const btnMore = document.getElementById('btn-more');
+  const menu = document.getElementById('more-menu');
+  btnMore?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menu?.classList.toggle('hidden');
+  });
+  // 点击菜单项后关闭
+  menu?.querySelectorAll('.recent-item').forEach(item => {
+    item.addEventListener('click', () => menu.classList.add('hidden'));
+  });
+  document.addEventListener('click', () => menu?.classList.add('hidden'));
+}
+initMoreMenu();
+
 // ===== 快捷键支持 =====
 // Ctrl/Cmd+O 打开文件，Ctrl/Cmd+S 保存导出
 document.addEventListener('keydown', (e) => {
