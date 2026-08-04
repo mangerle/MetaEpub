@@ -83,6 +83,12 @@ export class EpubHandler {
       return el ? el.textContent.trim() : '';
     };
 
+    // 读取 OPF meta 元素（如 calibre 约定的系列信息）
+    const getMeta = (name) => {
+      const el = metadataEl.querySelector(`meta[name="${name}"]`);
+      return el ? (el.getAttribute('content') || '').trim() : '';
+    };
+
     return {
       title: getText('title'),
       creator: getText('creator'),
@@ -90,7 +96,13 @@ export class EpubHandler {
       publisher: getText('publisher'),
       identifier: getText('identifier'),
       date: getText('date'),
-      description: getText('description')
+      description: getText('description'),
+      subject: getText('subject'),
+      contributor: getText('contributor'),
+      rights: getText('rights'),
+      source: getText('source'),
+      series: getMeta('calibre:series'),
+      seriesIndex: getMeta('calibre:series_index')
     };
   }
 
@@ -182,7 +194,7 @@ export class EpubHandler {
     const oldTitle = (this.opfDoc.querySelector('dc\\:title') || this.opfDoc.querySelector('title'))?.textContent?.trim() || '';
 
     // 常用 Dublin Core 字段映射
-    const fields = ['title', 'creator', 'language', 'publisher', 'identifier', 'date', 'description'];
+    const fields = ['title', 'creator', 'language', 'publisher', 'identifier', 'date', 'description', 'subject', 'contributor', 'rights', 'source'];
 
     fields.forEach(field => {
       const value = newMetadata[field] || '';
@@ -200,6 +212,23 @@ export class EpubHandler {
         metadataEl.removeChild(el);
       }
     });
+
+    // 系列名与系列序号（OPF meta 元素，calibre 约定）
+    const syncMeta = (name, value) => {
+      let meta = metadataEl.querySelector(`meta[name="${name}"]`);
+      if (value) {
+        if (!meta) {
+          meta = this.opfDoc.createElement('meta');
+          meta.setAttribute('name', name);
+          metadataEl.appendChild(meta);
+        }
+        meta.setAttribute('content', value);
+      } else if (meta) {
+        metadataEl.removeChild(meta);
+      }
+    };
+    syncMeta('calibre:series', (newMetadata.series || '').trim());
+    syncMeta('calibre:series_index', (newMetadata.seriesIndex || '').trim());
 
     // 书名变更时同步 EPUB2 目录(NCX) 与 EPUB3 导航文档(Nav) 中的标题
     const newTitle = (newMetadata.title || '').trim();

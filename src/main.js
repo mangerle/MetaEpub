@@ -130,6 +130,12 @@ function fillForm(metadata) {
   document.getElementById('input-date').value = metadata.date || '';
   document.getElementById('input-identifier').value = metadata.identifier || '';
   document.getElementById('input-description').value = metadata.description || '';
+  document.getElementById('input-subject').value = metadata.subject || '';
+  document.getElementById('input-contributor').value = metadata.contributor || '';
+  document.getElementById('input-rights').value = metadata.rights || '';
+  document.getElementById('input-source').value = metadata.source || '';
+  document.getElementById('input-series').value = metadata.series || '';
+  document.getElementById('input-series-index').value = metadata.seriesIndex || '';
 }
 
 // 收集表单数据
@@ -142,6 +148,12 @@ function getFormValues() {
     date: document.getElementById('input-date').value.trim(),
     identifier: document.getElementById('input-identifier').value.trim(),
     description: document.getElementById('input-description').value.trim(),
+    subject: document.getElementById('input-subject').value.trim(),
+    contributor: document.getElementById('input-contributor').value.trim(),
+    rights: document.getElementById('input-rights').value.trim(),
+    source: document.getElementById('input-source').value.trim(),
+    series: document.getElementById('input-series').value.trim(),
+    seriesIndex: document.getElementById('input-series-index').value.trim(),
   };
 }
 
