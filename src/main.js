@@ -71,6 +71,7 @@ async function handleFileLoad(arrayBuffer, fileName, path) {
     currentMetadata = { ...result.metadata };
     currentFilePath = path || null;
     fillForm(currentMetadata);
+    initHistory();
 
     // 更新封面
     updateCoverPreview(result.coverUrl);
@@ -121,21 +122,29 @@ async function openWithNativeDialog() {
   }
 }
 
+// 将表单值写入输入框（metadata 缺失 filename 时不动文件名）
+function applyFormValues(values) {
+  document.getElementById('input-title').value = values.title || '';
+  document.getElementById('input-creator').value = values.creator || '';
+  document.getElementById('input-language').value = values.language || '';
+  document.getElementById('input-publisher').value = values.publisher || '';
+  document.getElementById('input-date').value = values.date || '';
+  document.getElementById('input-identifier').value = values.identifier || '';
+  document.getElementById('input-description').value = values.description || '';
+  document.getElementById('input-subject').value = values.subject || '';
+  document.getElementById('input-contributor').value = values.contributor || '';
+  document.getElementById('input-rights').value = values.rights || '';
+  document.getElementById('input-source').value = values.source || '';
+  document.getElementById('input-series').value = values.series || '';
+  document.getElementById('input-series-index').value = values.seriesIndex || '';
+  if (values.filename !== undefined) {
+    document.getElementById('input-filename').value = values.filename;
+  }
+}
+
 // 填充表单
 function fillForm(metadata) {
-  document.getElementById('input-title').value = metadata.title || '';
-  document.getElementById('input-creator').value = metadata.creator || '';
-  document.getElementById('input-language').value = metadata.language || '';
-  document.getElementById('input-publisher').value = metadata.publisher || '';
-  document.getElementById('input-date').value = metadata.date || '';
-  document.getElementById('input-identifier').value = metadata.identifier || '';
-  document.getElementById('input-description').value = metadata.description || '';
-  document.getElementById('input-subject').value = metadata.subject || '';
-  document.getElementById('input-contributor').value = metadata.contributor || '';
-  document.getElementById('input-rights').value = metadata.rights || '';
-  document.getElementById('input-source').value = metadata.source || '';
-  document.getElementById('input-series').value = metadata.series || '';
-  document.getElementById('input-series-index').value = metadata.seriesIndex || '';
+  applyFormValues(metadata);
 }
 
 // 收集表单数据
@@ -154,7 +163,69 @@ function getFormValues() {
     source: document.getElementById('input-source').value.trim(),
     series: document.getElementById('input-series').value.trim(),
     seriesIndex: document.getElementById('input-series-index').value.trim(),
+    filename: document.getElementById('input-filename').value.trim(),
   };
+}
+
+// ===== 撤销 / 重做历史栈 =====
+let undoStack = [];
+let redoStack = [];
+let lastSnapshot = null;
+let snapshotTimer = null;
+
+// 记录当前表单状态到撤销栈（输入防抖后调用）
+function snapshotForm() {
+  const current = getFormValues();
+  const key = JSON.stringify(current);
+  if (lastSnapshot !== key) {
+    undoStack.push(current);
+    if (undoStack.length > 50) undoStack.shift(); // 限制历史深度
+    lastSnapshot = key;
+    redoStack = [];
+    updateHistoryButtons();
+  }
+}
+
+// 输入防抖：停止输入 400ms 后记录快照
+function scheduleSnapshot() {
+  clearTimeout(snapshotTimer);
+  snapshotTimer = setTimeout(snapshotForm, 400);
+}
+
+// 撤销：将当前状态入重做栈，恢复上一个快照
+function undo() {
+  if (undoStack.length === 0) return;
+  redoStack.push(getFormValues());
+  const prev = undoStack.pop();
+  lastSnapshot = JSON.stringify(prev);
+  applyFormValues(prev);
+  updateHistoryButtons();
+}
+
+// 重做：将当前状态入撤销栈，恢复下一个快照
+function redo() {
+  if (redoStack.length === 0) return;
+  undoStack.push(getFormValues());
+  const next = redoStack.pop();
+  lastSnapshot = JSON.stringify(next);
+  applyFormValues(next);
+  updateHistoryButtons();
+}
+
+// 初始化历史栈（加载新书后调用）
+function initHistory() {
+  undoStack = [];
+  redoStack = [];
+  lastSnapshot = JSON.stringify(getFormValues());
+  updateHistoryButtons();
+}
+
+// 更新撤销/重做按钮的可用状态
+function updateHistoryButtons() {
+  const btnUndo = document.getElementById('btn-undo');
+  const btnRedo = document.getElementById('btn-redo');
+  if (btnUndo) btnUndo.disabled = undoStack.length === 0;
+  if (btnRedo) btnRedo.disabled = redoStack.length === 0;
 }
 
 // 更新封面预览
@@ -183,8 +254,16 @@ coverInput.addEventListener('change', (e) => {
   }
 });
 
+// 表单输入时记录历史（防抖）
+metadataForm.addEventListener('input', scheduleSnapshot);
+
+// 撤销 / 重做按钮
+document.getElementById('btn-undo')?.addEventListener('click', undo);
+document.getElementById('btn-redo')?.addEventListener('click', redo);
+
 // 重置修改
 btnReset.addEventListener('click', () => {
+  snapshotForm(); // 记录当前状态以便撤销
   fillForm(currentMetadata);
   document.getElementById('input-filename').value = epubHandler.originalFileName;
   showToast('已重置为初始提取的元数据和文件名。', 'info');
