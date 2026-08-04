@@ -723,3 +723,18 @@ initAboutModal();
 initRecentMenu();
 initSettings();
 
+// ===== 快捷键支持 =====
+// Ctrl/Cmd+O 打开文件，Ctrl/Cmd+S 保存导出
+document.addEventListener('keydown', (e) => {
+  const mod = e.ctrlKey || e.metaKey;
+  if (!mod) return;
+  const key = e.key.toLowerCase();
+  if (key === 'o') {
+    e.preventDefault();
+    openWithNativeDialog();
+  } else if (key === 's' && !editorSection.classList.contains('hidden')) {
+    e.preventDefault();
+    metadataForm.requestSubmit();
+  }
+});
+
