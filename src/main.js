@@ -284,13 +284,104 @@ btnChangeCover.addEventListener('click', () => {
   coverInput.click();
 });
 
+// ===== 封面裁剪弹窗 =====
+const cropModal = document.getElementById('crop-modal');
+const cropImage = document.getElementById('crop-image');
+const cropZoom = document.getElementById('crop-zoom');
+const btnConfirmCrop = document.getElementById('btn-confirm-crop');
+const btnCancelCrop = document.getElementById('btn-cancel-crop');
+const btnCloseCrop = document.getElementById('btn-close-crop-modal');
+
+const CROP_W = 300;
+const CROP_H = 400;
+
+let cropState = null; // { file, base, scale, dx, dy }
+let cropDragging = false;
+let cropDragStart = null;
+
+function openCropModal(file) {
+  cropState = { file, base: 1, scale: 1, dx: 0, dy: 0 };
+  cropZoom.value = 1;
+  cropImage.onload = () => {
+    cropState.base = Math.max(CROP_W / cropImage.naturalWidth, CROP_H / cropImage.naturalHeight);
+    renderCrop();
+  };
+  cropImage.src = URL.createObjectURL(file);
+  cropModal.classList.remove('hidden');
+}
+
+function closeCropModal() {
+  cropModal.classList.add('hidden');
+  URL.revokeObjectURL(cropImage.src);
+  cropImage.src = '';
+  cropState = null;
+}
+
+function renderCrop() {
+  if (!cropState) return;
+  const s = cropState.base * cropState.scale;
+  cropImage.style.transform = `translate(calc(-50% + ${cropState.dx}px), calc(-50% + ${cropState.dy}px)) scale(${s})`;
+}
+
+// 拖动图片调整位置
+cropImage.addEventListener('mousedown', (e) => {
+  if (!cropState) return;
+  cropDragging = true;
+  cropDragStart = { x: e.clientX, y: e.clientY, dx: cropState.dx, dy: cropState.dy };
+});
+document.addEventListener('mousemove', (e) => {
+  if (!cropDragging || !cropState) return;
+  cropState.dx = cropDragStart.dx + (e.clientX - cropDragStart.x);
+  cropState.dy = cropDragStart.dy + (e.clientY - cropDragStart.y);
+  renderCrop();
+});
+document.addEventListener('mouseup', () => {
+  cropDragging = false;
+});
+
+// 缩放滑块
+cropZoom.addEventListener('input', () => {
+  if (!cropState) return;
+  cropState.scale = parseFloat(cropZoom.value);
+  renderCrop();
+});
+
+// 确认裁剪：用 canvas 生成裁剪后的封面
+btnConfirmCrop.addEventListener('click', () => {
+  if (!cropState) return;
+  const file = cropState.file;
+  const canvas = document.createElement('canvas');
+  canvas.width = CROP_W;
+  canvas.height = CROP_H;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, CROP_W, CROP_H);
+  const dw = cropImage.naturalWidth * cropState.base * cropState.scale;
+  const dh = cropImage.naturalHeight * cropState.base * cropState.scale;
+  const imgLeft = (CROP_W - dw) / 2 + cropState.dx;
+  const imgTop = (CROP_H - dh) / 2 + cropState.dy;
+  ctx.drawImage(cropImage, imgLeft, imgTop, dw, dh, 0, 0, CROP_W, CROP_H);
+
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    const croppedFile = new File([blob], file.name, { type: blob.type || 'image/jpeg' });
+    const previewUrl = epubHandler.setNewCover(croppedFile);
+    updateCoverPreview(previewUrl);
+    closeCropModal();
+    showToast(t('toast.coverUpdated'), 'info');
+  }, 'image/jpeg', 0.92);
+});
+
+// 取消 / 关闭
+btnCancelCrop?.addEventListener('click', closeCropModal);
+btnCloseCrop?.addEventListener('click', closeCropModal);
+
+// 更换封面：选择文件后打开裁剪弹窗
 coverInput.addEventListener('change', (e) => {
   if (e.target.files.length > 0) {
-    const coverFile = e.target.files[0];
-    const previewUrl = epubHandler.setNewCover(coverFile);
-    updateCoverPreview(previewUrl);
-    showToast(t('toast.coverUpdated'), 'info');
+    openCropModal(e.target.files[0]);
   }
+  e.target.value = ''; // 允许重复选择同一文件
 });
 
 // 表单输入时记录历史（防抖）

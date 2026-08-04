@@ -101,6 +101,12 @@ const messages = {
     'settings.pick': '选择',
     'settings.confirm': '确定',
 
+    // 封面裁剪
+    'crop.title': '裁剪封面',
+    'crop.zoom': '缩放',
+    'crop.cancel': '取消',
+    'crop.confirm': '应用裁剪',
+
     // 最近打开
     'recent.empty': '暂无最近打开记录',
 
@@ -212,6 +218,11 @@ const messages = {
     'settings.exportDirPlaceholder': 'Not set (system default)',
     'settings.pick': 'Browse',
     'settings.confirm': 'OK',
+
+    'crop.title': 'Crop Cover',
+    'crop.zoom': 'Zoom',
+    'crop.cancel': 'Cancel',
+    'crop.confirm': 'Apply Crop',
 
     'recent.empty': 'No recent files',
 

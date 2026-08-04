@@ -423,6 +423,52 @@ textarea {
   gap: 14px;
 }
 
+/* 封面裁剪弹窗 */
+.crop-container {
+  width: 300px;
+  height: 400px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-input);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-md);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.crop-container:active {
+  cursor: grabbing;
+}
+
+.crop-container img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: none;
+  transform-origin: center center;
+  pointer-events: none;
+}
+
+.crop-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px;
+}
+
+.crop-controls label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.crop-controls input[type="range"] {
+  flex: 1;
+  accent-color: var(--primary);
+}
+
 .version-badge-container {
   display: flex;
   align-items: center;
