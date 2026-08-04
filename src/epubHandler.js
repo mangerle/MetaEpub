@@ -239,39 +239,83 @@ export class EpubHandler {
   }
 
   /**
+   * 定位 OPF manifest 中对应封面的 item 节点
+   */
+  findCoverItem() {
+    const manifestEl = this.opfDoc.querySelector('manifest') || this.opfDoc.querySelector('opf\\:manifest');
+    if (!manifestEl) return null;
+
+    // 方式 1: meta[name="cover"] 的 content 指向 item 的 id
+    const coverMeta = this.opfDoc.querySelector('meta[name="cover"]');
+    if (coverMeta) {
+      const id = coverMeta.getAttribute('content');
+      if (id) {
+        const item = manifestEl.querySelector(`item[id="${id}"]`);
+        if (item) return item;
+      }
+    }
+
+    // 方式 2: properties 含 cover-image (EPUB3 规范)
+    return manifestEl.querySelector('item[properties*="cover-image"]');
+  }
+
+  /**
    * 将新封面写入 ZIP 并在 OPF 中保留/创建对应清单项
+   * 修复：替换封面时同步 manifest 的 media-type；扩展名变化时改用新路径并更新 href
    */
   async updateCoverInZip(file) {
     const arrayBuffer = await file.arrayBuffer();
     const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase() || '.jpg';
     const mimeType = file.type || this.getMIMETypeFromPath(ext);
 
-    let targetCoverPath = this.coverPath;
     const opfDir = this.opfPath.substring(0, this.opfPath.lastIndexOf('/') + 1);
 
-    if (!targetCoverPath) {
-      // 如果此前没有封面，新建一个标准路径
-      targetCoverPath = `${opfDir}cover${ext}`;
-      this.coverPath = targetCoverPath;
+    // 已有封面：替换
+    if (this.coverPath) {
+      const oldExt = this.coverPath.substring(this.coverPath.lastIndexOf('.')).toLowerCase();
+      const coverItem = this.findCoverItem();
 
-      // 在 manifest 中新建 item
-      const manifestEl = this.opfDoc.querySelector('manifest') || this.opfDoc.querySelector('opf\\:manifest');
-      if (manifestEl) {
-        const item = this.opfDoc.createElement('item');
-        item.setAttribute('id', 'cover-image');
-        item.setAttribute('href', `cover${ext}`);
-        item.setAttribute('media-type', mimeType);
-        item.setAttribute('properties', 'cover-image');
-        manifestEl.appendChild(item);
-
-        // 创建 meta[name="cover"]
-        const metadataEl = this.opfDoc.querySelector('metadata') || this.opfDoc.querySelector('opf\\:metadata');
-        if (metadataEl) {
-          const meta = this.opfDoc.createElement('meta');
-          meta.setAttribute('name', 'cover');
-          meta.setAttribute('content', 'cover-image');
-          metadataEl.appendChild(meta);
+      if (ext !== oldExt) {
+        // 扩展名变化：改用新路径，并同步 manifest 的 href 与 media-type
+        const targetCoverPath = this.coverPath.substring(0, this.coverPath.lastIndexOf('.')) + ext;
+        if (coverItem) {
+          coverItem.setAttribute('href', targetCoverPath.substring(opfDir.length));
+          coverItem.setAttribute('media-type', mimeType);
         }
+        // 删除旧文件并替换为新的
+        const oldFile = this.zip.file(this.coverPath);
+        if (oldFile) this.zip.remove(this.coverPath);
+        this.coverPath = targetCoverPath;
+        this.zip.file(this.coverPath, arrayBuffer);
+      } else {
+        // 扩展名相同：仅同步 media-type，防止与默认类型不一致
+        if (coverItem) coverItem.setAttribute('media-type', mimeType);
+        this.zip.file(this.coverPath, arrayBuffer);
+      }
+      return;
+    }
+
+    // 无封面：新建一个标准路径
+    const targetCoverPath = `${opfDir}cover${ext}`;
+    this.coverPath = targetCoverPath;
+
+    // 在 manifest 中新建 item
+    const manifestEl = this.opfDoc.querySelector('manifest') || this.opfDoc.querySelector('opf\\:manifest');
+    if (manifestEl) {
+      const item = this.opfDoc.createElement('item');
+      item.setAttribute('id', 'cover-image');
+      item.setAttribute('href', `cover${ext}`);
+      item.setAttribute('media-type', mimeType);
+      item.setAttribute('properties', 'cover-image');
+      manifestEl.appendChild(item);
+
+      // 创建 meta[name="cover"]
+      const metadataEl = this.opfDoc.querySelector('metadata') || this.opfDoc.querySelector('opf\\:metadata');
+      if (metadataEl) {
+        const meta = this.opfDoc.createElement('meta');
+        meta.setAttribute('name', 'cover');
+        meta.setAttribute('content', 'cover-image');
+        metadataEl.appendChild(meta);
       }
     }
 
