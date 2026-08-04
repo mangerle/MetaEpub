@@ -263,7 +263,12 @@
         <div class="form-group">
           <label for="input-export-dir" data-i18n="settings.exportDir">默认导出目录</label>
           <div class="setting-row">
-            <input type="text" id="input-export-dir" readonly data-i18n-placeholder="settings.exportDirPlaceholder" placeholder="未设置（使用系统默认）">
+            <div class="dir-input-wrap">
+              <svg class="dir-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>
+              </svg>
+              <input type="text" id="input-export-dir" readonly data-i18n-placeholder="settings.exportDirPlaceholder" placeholder="未设置（使用系统默认）">
+            </div>
             <button type="button" class="btn-secondary" id="btn-pick-dir" data-i18n="settings.pick">选择</button>
           </div>
         </div>

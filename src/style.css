@@ -735,8 +735,27 @@ textarea {
   align-items: center;
 }
 
-.setting-row input {
+/* 默认导出目录：输入框内嵌文件夹图标 */
+.dir-input-wrap {
+  position: relative;
   flex: 1;
+}
+
+.dir-input-wrap input {
+  width: 100%;
+  padding-left: 38px;
+}
+
+.dir-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  pointer-events: none;
+  flex-shrink: 0;
 }
 
 .setting-row .btn-secondary {
