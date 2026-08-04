@@ -178,6 +178,9 @@ export class EpubHandler {
       throw new Error('OPF XML 中缺失 <metadata> 节点');
     }
 
+    // 记录书名变更前的原值，用于同步目录/导航中的标题
+    const oldTitle = (this.opfDoc.querySelector('dc\\:title') || this.opfDoc.querySelector('title'))?.textContent?.trim() || '';
+
     // 常用 Dublin Core 字段映射
     const fields = ['title', 'creator', 'language', 'publisher', 'identifier', 'date', 'description'];
 
@@ -197,6 +200,12 @@ export class EpubHandler {
         metadataEl.removeChild(el);
       }
     });
+
+    // 书名变更时同步 EPUB2 目录(NCX) 与 EPUB3 导航文档(Nav) 中的标题
+    const newTitle = (newMetadata.title || '').trim();
+    if (newTitle && oldTitle !== newTitle) {
+      await this.syncTitleInNav(newTitle);
+    }
 
     // 处理新封面图替换
     if (this.newCoverFile) {
@@ -321,6 +330,51 @@ export class EpubHandler {
 
     // 写入图片二进制文件
     this.zip.file(targetCoverPath, arrayBuffer);
+  }
+
+  /**
+   * 同步书名到 EPUB2 目录(NCX) 与 EPUB3 导航文档(Nav) 中的标题
+   * @param {string} bookTitle 新的书名
+   */
+  async syncTitleInNav(bookTitle) {
+    const manifestEl = this.opfDoc.querySelector('manifest') || this.opfDoc.querySelector('opf\\:manifest');
+    if (!manifestEl) return;
+
+    const opfDir = this.opfPath.substring(0, this.opfPath.lastIndexOf('/') + 1);
+    const items = Array.from(manifestEl.querySelectorAll('item'));
+    const resolvePath = (href) => opfDir + href;
+
+    // 1. EPUB2 NCX 目录文件（media-type 为 application/x-dtbncx+xml）
+    const ncxItem = items.find(it => (it.getAttribute('media-type') || '') === 'application/x-dtbncx+xml');
+    if (ncxItem) {
+      const ncxPath = resolvePath(ncxItem.getAttribute('href'));
+      const ncxFile = this.zip.file(ncxPath);
+      if (ncxFile) {
+        const ncxXml = await ncxFile.async('text');
+        const ncxDoc = new DOMParser().parseFromString(ncxXml, 'application/xml');
+        const docTitleText = ncxDoc.querySelector('docTitle text');
+        if (docTitleText) {
+          docTitleText.textContent = bookTitle;
+          this.zip.file(ncxPath, new XMLSerializer().serializeToString(ncxDoc));
+        }
+      }
+    }
+
+    // 2. EPUB3 导航文档（manifest item 的 properties 含 nav）
+    const navItem = items.find(it => (it.getAttribute('properties') || '').split(/\s+/).includes('nav'));
+    if (navItem) {
+      const navPath = resolvePath(navItem.getAttribute('href'));
+      const navFile = this.zip.file(navPath);
+      if (navFile) {
+        const navXml = await navFile.async('text');
+        const navDoc = new DOMParser().parseFromString(navXml, 'application/xml');
+        const titleEl = navDoc.querySelector('head title');
+        if (titleEl) {
+          titleEl.textContent = bookTitle;
+          this.zip.file(navPath, new XMLSerializer().serializeToString(navDoc));
+        }
+      }
+    }
   }
 
   getMIMETypeFromPath(path) {
