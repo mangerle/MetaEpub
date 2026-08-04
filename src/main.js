@@ -21,6 +21,10 @@ const toastEl = document.getElementById('toast');
 const toastMessage = document.getElementById('toast-message');
 
 let currentMetadata = {};
+let currentFilePath = null; // 当前打开文件的本地路径（用于最近文件等）
+
+// 检测是否运行在 Tauri 桌面环境
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 // 监听拖拽上传
 dropZone.addEventListener('dragover', (e) => {
@@ -45,11 +49,11 @@ dropZone.addEventListener('drop', (e) => {
 
 // 点击 dropZone 唤起文件选择
 dropZone.addEventListener('click', () => {
-  fileInput.click();
+  openWithNativeDialog();
 });
 
 btnOpenNew.addEventListener('click', () => {
-  fileInput.click();
+  openWithNativeDialog();
 });
 
 fileInput.addEventListener('change', (e) => {
@@ -58,22 +62,22 @@ fileInput.addEventListener('change', (e) => {
   }
 });
 
-// 处理 EPUB 文件加载
-async function handleFileSelect(file) {
+// 处理 EPUB 文件加载（arrayBuffer 形式）
+async function handleFileLoad(arrayBuffer, fileName, path) {
   try {
     showToast('正在解析 EPUB 文件...', 'info');
-    const arrayBuffer = await file.arrayBuffer();
-    const result = await epubHandler.load(arrayBuffer, file.name);
+    const result = await epubHandler.load(arrayBuffer, fileName);
 
     currentMetadata = { ...result.metadata };
+    currentFilePath = path || null;
     fillForm(currentMetadata);
 
     // 更新封面
     updateCoverPreview(result.coverUrl);
 
     // 更新文件名展示与导出文件名输入框
-    fileNameDisplay.textContent = `文件: ${file.name}`;
-    document.getElementById('input-filename').value = file.name;
+    fileNameDisplay.textContent = `文件: ${fileName}`;
+    document.getElementById('input-filename').value = fileName;
 
     // 界面状态切换
     dropZone.classList.add('hidden');
@@ -84,6 +88,36 @@ async function handleFileSelect(file) {
   } catch (err) {
     console.error(err);
     showToast(`解析失败: ${err.message}`, 'error');
+  }
+}
+
+// 处理拖拽/选择的 File 对象
+async function handleFileSelect(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  await handleFileLoad(arrayBuffer, file.name, null);
+}
+
+// 通过原生文件对话框打开 EPUB（Tauri 环境）
+async function openWithNativeDialog() {
+  if (!isTauri) {
+    fileInput.click();
+    return;
+  }
+  try {
+    const { open } = await import('@tauri-apps/plugin-dialog');
+    const path = await open({
+      multiple: false,
+      filters: [{ name: 'EPUB', extensions: ['epub'] }]
+    });
+    if (!path) return; // 用户取消
+
+    const { invoke } = await import('@tauri-apps/api/core');
+    const data = await invoke('read_epub_file', { path });
+    const fileName = path.split(/[\\/]/).pop() || 'book.epub';
+    await handleFileLoad(data, fileName, path);
+  } catch (err) {
+    console.error(err);
+    showToast(`读取文件失败: ${err.message || err}`, 'error');
   }
 }
 
@@ -161,17 +195,31 @@ metadataForm.addEventListener('submit', async (e) => {
       customFileName += '.epub';
     }
 
-    // 触发浏览器/Tauri 导出下载
-    const downloadUrl = URL.createObjectURL(newBlob);
-    const a = document.createElement('a');
-    a.href = downloadUrl;
-    a.download = customFileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(downloadUrl);
+    if (isTauri) {
+      // 桌面环境：原生保存对话框，由 Rust 写入文件
+      const { save } = await import('@tauri-apps/plugin-dialog');
+      const path = await save({
+        defaultPath: customFileName,
+        filters: [{ name: 'EPUB', extensions: ['epub'] }]
+      });
+      if (!path) return; // 用户取消保存
 
-    showToast(`EPUB 文件 [${customFileName}] 导出成功！`, 'success');
+      const { invoke } = await import('@tauri-apps/api/core');
+      const bytes = new Uint8Array(await newBlob.arrayBuffer());
+      await invoke('save_epub_file', { path, data: Array.from(bytes) });
+      showToast(`EPUB 文件已保存至: ${path}`, 'success');
+    } else {
+      // Web 模式：浏览器下载
+      const downloadUrl = URL.createObjectURL(newBlob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = customFileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(downloadUrl);
+      showToast(`EPUB 文件 [${customFileName}] 导出成功！`, 'success');
+    }
   } catch (err) {
     console.error(err);
     showToast(`导出失败: ${err.message}`, 'error');
