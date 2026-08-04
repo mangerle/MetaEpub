@@ -178,9 +178,10 @@ export class EpubHandler {
 
   /**
    * 更新 EPUB 元数据并导出新的 EPUB Blob
-   * @param {Object} newMetadata 
+   * @param {Object} newMetadata
+   * @param {number} [compressionLevel=9] 压缩级别 0-9
    */
-  async save(newMetadata) {
+  async save(newMetadata, compressionLevel = 9) {
     if (!this.zip || !this.opfDoc) {
       throw new Error('未加载任何 EPUB 文件');
     }
@@ -272,7 +273,7 @@ export class EpubHandler {
       type: 'blob',
       mimeType: 'application/epub+zip',
       compression: 'DEFLATE',
-      compressionOptions: { level: 9 }
+      compressionOptions: { level: compressionLevel }
     });
 
     // 导出前校验结构完整性，不合格则阻止导出

@@ -72,6 +72,7 @@ async function handleFileLoad(arrayBuffer, fileName, path) {
     currentFilePath = path || null;
     fillForm(currentMetadata);
     initHistory();
+    if (path) addRecentFile(path, fileName);
 
     // 更新封面
     updateCoverPreview(result.coverUrl);
@@ -275,7 +276,7 @@ metadataForm.addEventListener('submit', async (e) => {
   try {
     showToast('正在打包导出 EPUB...', 'info');
     const newMetadata = getFormValues();
-    const newBlob = await epubHandler.save(newMetadata);
+    const newBlob = await epubHandler.save(newMetadata, settings.compressionLevel ?? 9);
 
     // 获取导出文件名（若没有加 .epub 则自动补全）
     let customFileName = document.getElementById('input-filename').value.trim();
@@ -289,11 +290,19 @@ metadataForm.addEventListener('submit', async (e) => {
     if (isTauri) {
       // 桌面环境：原生保存对话框，由 Rust 写入文件
       const { save } = await import('@tauri-apps/plugin-dialog');
+      const defaultPath = settings.exportDir ? `${settings.exportDir}\\${customFileName}` : customFileName;
       const path = await save({
-        defaultPath: customFileName,
+        defaultPath,
         filters: [{ name: 'EPUB', extensions: ['epub'] }]
       });
       if (!path) return; // 用户取消保存
+
+      // 记录导出目录，下次默认打开
+      const dir = path.replace(/[\\/][^\\/]*$/, '');
+      if (dir && dir !== settings.exportDir) {
+        settings.exportDir = dir;
+        saveSettings();
+      }
 
       const { invoke } = await import('@tauri-apps/api/core');
       const bytes = new Uint8Array(await newBlob.arrayBuffer());
@@ -449,6 +458,119 @@ function initUpdater() {
 // 启动更新控制器
 initUpdater();
 
+// ===== 最近打开文件 =====
+const RECENT_KEY = 'metaepub.recentFiles';
+
+function getRecentFiles() {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function addRecentFile(path, name) {
+  if (!path) return;
+  const list = getRecentFiles().filter(f => f.path !== path);
+  list.unshift({ path, name, time: Date.now() });
+  localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 10)));
+  renderRecentMenu();
+}
+
+function renderRecentMenu() {
+  const menu = document.getElementById('recent-menu');
+  if (!menu) return;
+  const list = getRecentFiles();
+  menu.innerHTML = '';
+  if (list.length === 0) {
+    menu.innerHTML = '<div class="recent-empty">暂无最近打开记录</div>';
+    return;
+  }
+  list.forEach(f => {
+    const item = document.createElement('div');
+    item.className = 'recent-item';
+    item.textContent = f.name;
+    item.title = f.path;
+    item.addEventListener('click', () => reopenRecent(f.path));
+    menu.appendChild(item);
+  });
+}
+
+async function reopenRecent(path) {
+  document.getElementById('recent-menu')?.classList.add('hidden');
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    const data = await invoke('read_epub_file', { path });
+    const fileName = path.split(/[\\/]/).pop() || 'book.epub';
+    await handleFileLoad(data, fileName, path);
+  } catch (err) {
+    showToast(`读取失败: ${err.message || err}`, 'error');
+  }
+}
+
+function initRecentMenu() {
+  const btnRecent = document.getElementById('btn-recent');
+  const menu = document.getElementById('recent-menu');
+  btnRecent?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menu?.classList.toggle('hidden');
+    renderRecentMenu();
+  });
+  document.addEventListener('click', () => menu?.classList.add('hidden'));
+}
+
+// ===== 导出设置 =====
+const SETTINGS_KEY = 'metaepub.settings';
+let settings = loadSettings();
+
+function loadSettings() {
+  try {
+    return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function initSettings() {
+  const modal = document.getElementById('settings-modal');
+  const btnSettings = document.getElementById('btn-settings');
+  const btnClose = document.getElementById('btn-close-settings-modal');
+  const btnConfirm = document.getElementById('btn-confirm-settings');
+  const btnPickDir = document.getElementById('btn-pick-dir');
+  const compressionInput = document.getElementById('input-compression');
+  const dirInput = document.getElementById('input-export-dir');
+
+  const open = () => {
+    compressionInput.value = settings.compressionLevel ?? 9;
+    dirInput.value = settings.exportDir || '';
+    modal.classList.remove('hidden');
+  };
+  const close = () => modal.classList.add('hidden');
+
+  btnSettings?.addEventListener('click', open);
+  btnClose?.addEventListener('click', close);
+  btnConfirm?.addEventListener('click', () => {
+    settings.compressionLevel = parseInt(compressionInput.value, 10) || 9;
+    settings.exportDir = dirInput.value.trim() || null;
+    saveSettings();
+    close();
+    showToast('设置已保存。', 'success');
+  });
+  btnPickDir?.addEventListener('click', async () => {
+    if (!isTauri) {
+      showToast('原生目录选择仅在桌面版可用。', 'info');
+      return;
+    }
+    const { open } = await import('@tauri-apps/plugin-dialog');
+    const dir = await open({ directory: true, multiple: false });
+    if (dir) dirInput.value = dir;
+  });
+}
+
 // 关于弹窗控制
 function initAboutModal() {
   const btnAbout = document.getElementById('btn-about');
@@ -469,4 +591,6 @@ function initAboutModal() {
 }
 
 initAboutModal();
+initRecentMenu();
+initSettings();
 

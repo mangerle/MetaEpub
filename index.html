@@ -17,6 +17,11 @@
       <div id="header-actions" class="hidden">
         <button class="btn-secondary" id="btn-open-new">打开其他电子书</button>
       </div>
+      <div class="recent-dropdown" id="recent-dropdown">
+        <button class="btn-secondary" id="btn-recent">🕘 最近打开</button>
+        <div class="recent-menu hidden" id="recent-menu"></div>
+      </div>
+      <button class="btn-secondary" id="btn-settings">⚙️ 设置</button>
       <button class="btn-secondary" id="btn-check-update">✨ 检查更新</button>
       <button class="btn-secondary" id="btn-about">ℹ️ 关于</button>
     </div>
@@ -201,6 +206,39 @@
       </div>
       <div class="modal-footer">
         <button class="btn-primary" id="btn-confirm-about">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置弹窗 Modal -->
+  <div id="settings-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ 设置</div>
+        <button id="btn-close-settings-modal" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="input-compression">压缩级别（0-9，越大文件越小但导出越慢）</label>
+          <select id="input-compression">
+            <option value="0">0 - 不压缩（最快）</option>
+            <option value="1">1 - 低压缩</option>
+            <option value="3">3 - 中低压缩</option>
+            <option value="5">5 - 中等压缩（推荐）</option>
+            <option value="7">7 - 高压缩</option>
+            <option value="9">9 - 最大压缩（最慢）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="input-export-dir">默认导出目录</label>
+          <div class="setting-row">
+            <input type="text" id="input-export-dir" readonly placeholder="未设置（使用系统默认）">
+            <button type="button" class="btn-secondary" id="btn-pick-dir">选择</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" id="btn-confirm-settings">确定</button>
       </div>
     </div>
   </div>
