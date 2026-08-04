@@ -142,13 +142,26 @@ async function openWithNativeDialog() {
   }
 }
 
+// 将任意日期字符串转换为 date 输入框可接受的 yyyy-mm-dd 格式
+function toDateInputValue(raw) {
+  if (!raw) return '';
+  const s = String(raw).trim();
+  const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+  const ym = s.match(/^(\d{4})-(\d{1,2})$/);
+  if (ym) return `${ym[1]}-${ym[2].padStart(2, '0')}-01`;
+  const y = s.match(/^(\d{4})$/);
+  if (y) return `${y[1]}-01-01`;
+  return '';
+}
+
 // 将表单值写入输入框（metadata 缺失 filename 时不动文件名）
 function applyFormValues(values) {
   document.getElementById('input-title').value = values.title || '';
   document.getElementById('input-creator').value = values.creator || '';
   document.getElementById('input-language').value = values.language || '';
   document.getElementById('input-publisher').value = values.publisher || '';
-  document.getElementById('input-date').value = values.date || '';
+  document.getElementById('input-date').value = toDateInputValue(values.date);
   document.getElementById('input-identifier').value = values.identifier || '';
   document.getElementById('input-description').value = values.description || '';
   document.getElementById('input-subject').value = values.subject || '';
