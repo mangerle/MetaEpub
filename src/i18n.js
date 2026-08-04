@@ -23,6 +23,8 @@ const messages = {
     'cover.alt': '封面预览',
     'file.info': '文件: {0}',
     'file.infoInitial': '文件: -',
+    'preview.title': '内容预览',
+    'preview.empty': '暂无正文内容',
 
     // 表单标签
     'label.title': '书名 (Title)',
@@ -140,6 +142,8 @@ const messages = {
     'cover.alt': 'Cover preview',
     'file.info': 'File: {0}',
     'file.infoInitial': 'File: -',
+    'preview.title': 'Content Preview',
+    'preview.empty': 'No content',
 
     'label.title': 'Title',
     'label.creator': 'Author',

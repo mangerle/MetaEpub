@@ -23,6 +23,7 @@ const coverInput = document.getElementById('cover-input');
 const coverImg = document.getElementById('cover-img');
 const coverPlaceholder = document.getElementById('cover-placeholder');
 const fileNameDisplay = document.getElementById('file-name-display');
+const contentPreviewBody = document.getElementById('content-preview-body');
 
 const btnOpenNew = document.getElementById('btn-open-new');
 const btnChangeCover = document.getElementById('btn-change-cover');
@@ -87,6 +88,13 @@ async function handleFileLoad(arrayBuffer, fileName, path) {
 
     // 更新封面
     updateCoverPreview(result.coverUrl);
+
+    // 更新书籍内容预览（失败不影响主流程）
+    try {
+      updateContentPreview(await epubHandler.extractContentPreview());
+    } catch (previewErr) {
+      console.warn('内容预览提取失败:', previewErr);
+    }
 
     // 更新文件名展示与导出文件名输入框
     fileNameDisplay.textContent = t('file.info', fileName);
@@ -250,6 +258,12 @@ function updateCoverPreview(url) {
     coverImg.classList.add('hidden');
     coverPlaceholder.classList.remove('hidden');
   }
+}
+
+// 更新书籍内容预览
+function updateContentPreview(text) {
+  if (!contentPreviewBody) return;
+  contentPreviewBody.textContent = text || t('preview.empty');
 }
 
 // 更换封面按钮

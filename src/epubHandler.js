@@ -482,6 +482,54 @@ export class EpubHandler {
     }
   }
 
+  /**
+   * 提取书籍正文内容预览（前几章纯文本）
+   * @param {number} [maxChapters=3] 最多提取的章节数
+   * @param {number} [maxChars=2000] 最多返回的字符数
+   * @returns {Promise<string>} 纯文本预览
+   */
+  async extractContentPreview(maxChapters = 3, maxChars = 2000) {
+    if (!this.zip || !this.opfDoc) return '';
+    const manifestEl = this.opfDoc.querySelector('manifest') || this.opfDoc.querySelector('opf\\:manifest');
+    const spineEl = this.opfDoc.querySelector('spine') || this.opfDoc.querySelector('opf\\:spine');
+    if (!manifestEl || !spineEl) return '';
+
+    const idToItem = {};
+    Array.from(manifestEl.querySelectorAll('item')).forEach(it => {
+      idToItem[it.getAttribute('id')] = it;
+    });
+
+    const opfDir = this.opfPath.substring(0, this.opfPath.lastIndexOf('/') + 1);
+    const idrefs = Array.from(spineEl.querySelectorAll('itemref')).map(r => r.getAttribute('idref'));
+
+    let text = '';
+    let chapterCount = 0;
+    for (const idref of idrefs) {
+      const item = idToItem[idref];
+      if (!item) continue;
+      const mediaType = item.getAttribute('media-type') || '';
+      const properties = item.getAttribute('properties') || '';
+      // 跳过图片等非文本章节
+      if (!mediaType.includes('html') && !mediaType.includes('xml')) continue;
+      if (properties.split(/\s+/).includes('cover-image')) continue;
+
+      const file = this.zip.file(opfDir + item.getAttribute('href'));
+      if (!file) continue;
+
+      const content = await file.async('text');
+      const doc = new DOMParser().parseFromString(content, 'text/html');
+      const clean = (doc.body?.textContent || '').replace(/\s+/g, ' ').trim();
+      if (clean) {
+        text += `\n${clean}`;
+        chapterCount++;
+      }
+      if (chapterCount >= maxChapters) break;
+    }
+
+    const trimmed = text.trim();
+    return trimmed.length > maxChars ? trimmed.slice(0, maxChars) + '…' : trimmed;
+  }
+
   getMIMETypeFromPath(path) {
     const lower = path.toLowerCase();
     if (lower.endsWith('.png')) return 'image/png';
