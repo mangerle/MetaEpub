@@ -8,11 +8,11 @@ const messages = {
     // 头部
     'app.title': 'MetaEpub - EPUB 元数据编辑器',
     'app.openOther': '打开其他电子书',
-    'app.recent': '🕘 最近打开',
-    'app.settings': '⚙️ 设置',
-    'app.checkUpdate': '✨ 检查更新',
-    'app.about': 'ℹ️ 关于',
-    'app.more': '⋯ 更多',
+    'app.recent': '最近打开',
+    'app.settings': '设置',
+    'app.checkUpdate': '检查更新',
+    'app.about': '关于',
+    'app.more': '更多',
 
     // 拖拽区
     'drop.title': '拖拽 EPUB 文件到此处',
@@ -24,8 +24,8 @@ const messages = {
     'cover.alt': '封面预览',
     'file.info': '文件: {0}',
     'file.infoInitial': '文件: -',
-    'preview.title': '内容预览',
-    'preview.empty': '暂无正文内容',
+    'preview.title': '目录预览',
+    'preview.empty': '暂无目录',
 
     // 表单标签
     'label.title': '书名 (Title)',
@@ -65,7 +65,7 @@ const messages = {
     'action.save': '保存并导出 EPUB',
 
     // 更新弹窗
-    'update.title': '🚀 发现新版本',
+    'update.title': '发现新版本',
     'update.notesTitle': '更新说明：',
     'update.notesLoading': '解析版本日志中...',
     'update.cancel': '稍后再说',
@@ -89,7 +89,7 @@ const messages = {
     'about.confirm': '确定',
 
     // 设置弹窗
-    'settings.title': '⚙️ 设置',
+    'settings.title': '设置',
     'settings.compression': '压缩级别（0-9，越大文件越小但导出越慢）',
     'settings.comp0': '0 - 不压缩（最快）',
     'settings.comp1': '1 - 低压缩',
@@ -135,10 +135,10 @@ const messages = {
   en: {
     'app.title': 'MetaEpub - EPUB Metadata Editor',
     'app.openOther': 'Open Another Book',
-    'app.recent': '🕘 Recent',
-    'app.settings': '⚙️ Settings',
-    'app.checkUpdate': '✨ Check Update',
-    'app.about': 'ℹ️ About',
+    'app.recent': 'Recent',
+    'app.settings': 'Settings',
+    'app.checkUpdate': 'Check Update',
+    'app.about': 'About',
     'app.more': '⋯ More',
 
     'drop.title': 'Drag an EPUB file here',
@@ -149,8 +149,8 @@ const messages = {
     'cover.alt': 'Cover preview',
     'file.info': 'File: {0}',
     'file.infoInitial': 'File: -',
-    'preview.title': 'Content Preview',
-    'preview.empty': 'No content',
+    'preview.title': 'Table of Contents',
+    'preview.empty': 'No table of contents',
 
     'label.title': 'Title',
     'label.creator': 'Author',
@@ -186,7 +186,7 @@ const messages = {
     'action.reset': 'Reset',
     'action.save': 'Save & Export EPUB',
 
-    'update.title': '🚀 New Version Available',
+    'update.title': 'New Version Available',
     'update.notesTitle': 'Release Notes:',
     'update.notesLoading': 'Loading release notes...',
     'update.cancel': 'Later',
@@ -208,7 +208,7 @@ const messages = {
     'about.envText': 'Tauri desktop client (Windows / macOS / Linux)',
     'about.confirm': 'OK',
 
-    'settings.title': '⚙️ Settings',
+    'settings.title': 'Settings',
     'settings.compression': 'Compression level (0-9, higher = smaller but slower)',
     'settings.comp0': '0 - No compression (fastest)',
     'settings.comp1': '1 - Low compression',

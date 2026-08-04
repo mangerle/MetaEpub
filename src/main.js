@@ -89,11 +89,11 @@ async function handleFileLoad(arrayBuffer, fileName, path) {
     // 更新封面
     updateCoverPreview(result.coverUrl);
 
-    // 更新书籍内容预览（失败不影响主流程）
+    // 更新书籍目录预览（失败不影响主流程）
     try {
-      updateContentPreview(await epubHandler.extractContentPreview());
+      await updateTocPreview();
     } catch (previewErr) {
-      console.warn('内容预览提取失败:', previewErr);
+      console.warn('目录预览提取失败:', previewErr);
     }
 
     // 更新文件名展示与导出文件名输入框
@@ -273,10 +273,32 @@ function updateCoverPreview(url) {
   }
 }
 
-// 更新书籍内容预览
-function updateContentPreview(text) {
+// 更新书籍目录预览
+async function updateTocPreview() {
   if (!contentPreviewBody) return;
-  contentPreviewBody.textContent = text || t('preview.empty');
+  const toc = await epubHandler.extractToc();
+  if (!toc || toc.length === 0) {
+    contentPreviewBody.textContent = t('preview.empty');
+    return;
+  }
+  contentPreviewBody.innerHTML = '';
+  contentPreviewBody.appendChild(renderTocList(toc));
+}
+
+// 渲染目录树形列表
+function renderTocList(items) {
+  const ul = document.createElement('ul');
+  ul.className = 'toc-list';
+  items.forEach(item => {
+    const li = document.createElement('li');
+    li.className = 'toc-item';
+    li.textContent = item.label;
+    if (item.children && item.children.length) {
+      li.appendChild(renderTocList(item.children));
+    }
+    ul.appendChild(li);
+  });
+  return ul;
 }
 
 // 更换封面按钮

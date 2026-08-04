@@ -10,7 +10,12 @@
   <!-- Header 导航 -->
   <header>
     <div class="logo-area">
-      <div class="logo-icon">📚</div>
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+      </div>
       <div class="logo-title">MetaEpub</div>
     </div>
     <div class="header-right">
@@ -18,19 +23,19 @@
         <button class="btn-secondary" id="btn-open-new" data-i18n="app.openOther">打开其他电子书</button>
       </div>
       <div class="recent-dropdown" id="recent-dropdown">
-        <button class="btn-secondary" id="btn-recent" data-i18n="app.recent">🕘 最近打开</button>
+        <button class="btn-secondary" id="btn-recent" data-i18n="app.recent">最近打开</button>
         <div class="recent-menu hidden" id="recent-menu"></div>
       </div>
       <select id="lang-select" class="lang-select" title="Language">
         <option value="zh">中文</option>
         <option value="en">English</option>
       </select>
-      <button class="btn-secondary" id="btn-settings" data-i18n="app.settings">⚙️ 设置</button>
+      <button class="btn-secondary" id="btn-settings" data-i18n="app.settings">设置</button>
       <div class="recent-dropdown" id="more-dropdown">
-        <button class="btn-secondary" id="btn-more" data-i18n="app.more">⋯ 更多</button>
+        <button class="btn-secondary" id="btn-more" data-i18n="app.more">更多</button>
         <div class="recent-menu hidden" id="more-menu">
-          <div class="recent-item" id="btn-check-update" data-i18n="app.checkUpdate">✨ 检查更新</div>
-          <div class="recent-item" id="btn-about" data-i18n="app.about">ℹ️ 关于</div>
+          <div class="recent-item" id="btn-check-update" data-i18n="app.checkUpdate">检查更新</div>
+          <div class="recent-item" id="btn-about" data-i18n="app.about">关于</div>
         </div>
       </div>
     </div>
@@ -39,7 +44,13 @@
   <main>
     <!-- 空状态：拖拽/选择文件 -->
     <div id="drop-zone" class="drop-zone">
-      <div class="drop-icon">📖</div>
+      <div class="drop-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
       <div class="drop-title" data-i18n="drop.title">拖拽 EPUB 文件到此处</div>
       <div class="drop-subtitle" data-i18n="drop.subtitle">或者点击此处选择电脑中的 .epub 电子书</div>
     </div>
@@ -55,8 +66,8 @@
         <button class="btn-secondary" id="btn-change-cover" data-i18n="cover.change">更换封面图片</button>
         <div class="file-info" id="file-name-display" data-i18n="file.infoInitial">文件: -</div>
         <div class="content-preview">
-          <div class="content-preview-title" data-i18n="preview.title">内容预览</div>
-          <div class="content-preview-body" id="content-preview-body" data-i18n="preview.empty">暂无正文内容</div>
+          <div class="content-preview-title" data-i18n="preview.title">目录预览</div>
+          <div class="content-preview-body" id="content-preview-body" data-i18n="preview.empty">暂无目录</div>
         </div>
       </div>
 
@@ -172,13 +183,12 @@
   <div id="update-modal" class="modal-backdrop hidden">
     <div class="modal-card">
       <div class="modal-header">
-        <div class="modal-title" data-i18n="update.title">🚀 发现新版本</div>
+        <div class="modal-title" data-i18n="update.title">发现新版本</div>
         <button id="btn-close-update-modal" class="modal-close-btn">&times;</button>
       </div>
       <div class="modal-body">
         <div class="version-badge-container">
           <span class="version-badge current" id="update-current-ver">v0.1.0</span>
-          <span class="version-arrow">➔</span>
           <span class="version-badge latest" id="update-latest-ver">v0.2.0</span>
         </div>
         <div class="update-notes-title" data-i18n="update.notesTitle">更新说明：</div>
@@ -211,7 +221,12 @@
       </div>
       <div class="modal-body about-body">
         <div class="about-app-brand">
-          <div class="about-logo">📚</div>
+          <div class="about-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+          </div>
           <div class="about-app-name">MetaEpub</div>
           <span class="about-app-version">v0.2.3</span>
         </div>
@@ -245,7 +260,7 @@
   <div id="settings-modal" class="modal-backdrop hidden">
     <div class="modal-card">
       <div class="modal-header">
-        <div class="modal-title" data-i18n="settings.title">⚙️ 设置</div>
+        <div class="modal-title" data-i18n="settings.title">设置</div>
         <button id="btn-close-settings-modal" class="modal-close-btn">&times;</button>
       </div>
       <div class="modal-body">

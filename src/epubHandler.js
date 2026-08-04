@@ -483,51 +483,74 @@ export class EpubHandler {
   }
 
   /**
-   * 提取书籍正文内容预览（前几章纯文本）
-   * @param {number} [maxChapters=3] 最多提取的章节数
-   * @param {number} [maxChars=2000] 最多返回的字符数
-   * @returns {Promise<string>} 纯文本预览
+   * 提取书籍目录（优先 EPUB3 Nav，其次 EPUB2 NCX）
+   * @returns {Promise<Array<{label: string, children: Array}>>} 树形目录结构
    */
-  async extractContentPreview(maxChapters = 3, maxChars = 2000) {
-    if (!this.zip || !this.opfDoc) return '';
+  async extractToc() {
+    if (!this.zip || !this.opfDoc) return [];
     const manifestEl = this.opfDoc.querySelector('manifest') || this.opfDoc.querySelector('opf\\:manifest');
-    const spineEl = this.opfDoc.querySelector('spine') || this.opfDoc.querySelector('opf\\:spine');
-    if (!manifestEl || !spineEl) return '';
-
-    const idToItem = {};
-    Array.from(manifestEl.querySelectorAll('item')).forEach(it => {
-      idToItem[it.getAttribute('id')] = it;
-    });
+    if (!manifestEl) return [];
 
     const opfDir = this.opfPath.substring(0, this.opfPath.lastIndexOf('/') + 1);
-    const idrefs = Array.from(spineEl.querySelectorAll('itemref')).map(r => r.getAttribute('idref'));
+    const items = Array.from(manifestEl.querySelectorAll('item'));
 
-    let text = '';
-    let chapterCount = 0;
-    for (const idref of idrefs) {
-      const item = idToItem[idref];
-      if (!item) continue;
-      const mediaType = item.getAttribute('media-type') || '';
-      const properties = item.getAttribute('properties') || '';
-      // 跳过图片等非文本章节
-      if (!mediaType.includes('html') && !mediaType.includes('xml')) continue;
-      if (properties.split(/\s+/).includes('cover-image')) continue;
-
-      const file = this.zip.file(opfDir + item.getAttribute('href'));
-      if (!file) continue;
-
-      const content = await file.async('text');
-      const doc = new DOMParser().parseFromString(content, 'text/html');
-      const clean = (doc.body?.textContent || '').replace(/\s+/g, ' ').trim();
-      if (clean) {
-        text += `\n${clean}`;
-        chapterCount++;
+    // 1. EPUB3 导航文档（manifest item 的 properties 含 nav）
+    const navItem = items.find(it => (it.getAttribute('properties') || '').split(/\s+/).includes('nav'));
+    if (navItem) {
+      const navPath = opfDir + navItem.getAttribute('href');
+      const navFile = this.zip.file(navPath);
+      if (navFile) {
+        const navXml = await navFile.async('text');
+        const navDoc = new DOMParser().parseFromString(navXml, 'text/html');
+        const nav = navDoc.querySelector('nav[epub\\:type="toc"], nav[type="toc"]');
+        const ol = nav ? nav.querySelector('ol') : null;
+        if (ol) return this.parseNavList(ol);
       }
-      if (chapterCount >= maxChapters) break;
     }
 
-    const trimmed = text.trim();
-    return trimmed.length > maxChars ? trimmed.slice(0, maxChars) + '…' : trimmed;
+    // 2. EPUB2 NCX 目录文件（media-type 为 application/x-dtbncx+xml）
+    const ncxItem = items.find(it => (it.getAttribute('media-type') || '') === 'application/x-dtbncx+xml');
+    if (ncxItem) {
+      const ncxPath = opfDir + ncxItem.getAttribute('href');
+      const ncxFile = this.zip.file(ncxPath);
+      if (ncxFile) {
+        const ncxXml = await ncxFile.async('text');
+        const ncxDoc = new DOMParser().parseFromString(ncxXml, 'application/xml');
+        const navMap = ncxDoc.querySelector('navMap') || ncxDoc.querySelector('ncx\\:navMap');
+        if (navMap) return this.parseNavMap(navMap);
+      }
+    }
+
+    return [];
+  }
+
+  /** 解析 EPUB3 Nav 的 <ol>/<li> 层级 */
+  parseNavList(ol) {
+    const result = [];
+    for (const child of ol.children) {
+      if (child.localName !== 'li') continue;
+      const a = child.querySelector('a, span');
+      const childOl = Array.from(child.children).find(c => c.localName === 'ol');
+      result.push({
+        label: (a ? a.textContent : '').trim(),
+        children: childOl ? this.parseNavList(childOl) : []
+      });
+    }
+    return result;
+  }
+
+  /** 解析 EPUB2 NCX 的 <navPoint> 嵌套层级 */
+  parseNavMap(parentEl) {
+    const result = [];
+    for (const child of parentEl.children) {
+      if (child.localName !== 'navPoint') continue;
+      const textEl = child.querySelector('navLabel text') || child.querySelector('navLabel\\:text');
+      result.push({
+        label: (textEl ? textEl.textContent : '').trim(),
+        children: this.parseNavMap(child)
+      });
+    }
+    return result;
   }
 
   getMIMETypeFromPath(path) {
