@@ -239,12 +239,87 @@ export class EpubHandler {
     }
 
     // 导出 Blob
-    return await newZip.generateAsync({
+    const blob = await newZip.generateAsync({
       type: 'blob',
       mimeType: 'application/epub+zip',
       compression: 'DEFLATE',
       compressionOptions: { level: 9 }
     });
+
+    // 导出前校验结构完整性，不合格则阻止导出
+    const errors = await this.validate(newZip);
+    if (errors.length) {
+      throw new Error(`EPUB 结构校验未通过：${errors.join('；')}`);
+    }
+
+    return blob;
+  }
+
+  /**
+   * 校验待导出的 EPUB 结构完整性
+   * @param {JSZip} zip 待校验的 ZIP 实例
+   * @returns {Promise<string[]>} 校验错误列表（空数组表示通过）
+   */
+  async validate(zip) {
+    const errors = [];
+    const keys = Object.keys(zip.files);
+
+    // 1. mimetype 必须是第一个条目且为 STORE 压缩
+    const firstKey = keys[0];
+    if (firstKey !== 'mimetype') {
+      errors.push('mimetype 未位于 ZIP 首位');
+    } else {
+      const mimeFile = zip.file('mimetype');
+      if (mimeFile) {
+        const content = await mimeFile.async('text');
+        if (content.trim() !== 'application/epub+zip') {
+          errors.push('mimetype 内容不正确');
+        }
+        if (mimeFile.options.compression !== 'STORE') {
+          errors.push('mimetype 未使用 STORE 压缩');
+        }
+      }
+    }
+
+    // 2. container.xml 存在且指向的 OPF 存在
+    const containerFile = zip.file('META-INF/container.xml');
+    if (!containerFile) {
+      errors.push('缺少 META-INF/container.xml');
+    } else {
+      const containerXml = await containerFile.async('text');
+      const containerDoc = new DOMParser().parseFromString(containerXml, 'application/xml');
+      const rootfile = containerDoc.querySelector('rootfile');
+      const opfPath = rootfile?.getAttribute('full-path');
+      if (!opfPath) {
+        errors.push('container.xml 未指明 OPF 路径');
+      } else if (!zip.file(opfPath)) {
+        errors.push(`OPF 文件缺失: ${opfPath}`);
+      } else {
+        // 3. 校验 spine 引用完整性
+        const opfXml = await zip.file(opfPath).async('text');
+        const opfDoc = new DOMParser().parseFromString(opfXml, 'application/xml');
+        const manifestEl = opfDoc.querySelector('manifest') || opfDoc.querySelector('opf\\:manifest');
+        const spineEl = opfDoc.querySelector('spine') || opfDoc.querySelector('opf\\:spine');
+        if (manifestEl && spineEl) {
+          const idToHref = {};
+          Array.from(manifestEl.querySelectorAll('item')).forEach(it => {
+            if (it.getAttribute('id')) idToHref[it.getAttribute('id')] = it.getAttribute('href');
+          });
+          const opfDir = opfPath.substring(0, opfPath.lastIndexOf('/') + 1);
+          const idrefs = Array.from(spineEl.querySelectorAll('itemref')).map(r => r.getAttribute('idref'));
+          for (const idref of idrefs) {
+            const href = idToHref[idref];
+            if (!href) {
+              errors.push(`spine 引用了不存在的 manifest id: ${idref}`);
+            } else if (!zip.file(opfDir + href)) {
+              errors.push(`spine 引用的文件缺失: ${href}`);
+            }
+          }
+        }
+      }
+    }
+
+    return errors;
   }
 
   /**
