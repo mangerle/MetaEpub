@@ -1,4 +1,15 @@
 import { EpubHandler } from './epubHandler.js';
+import { initI18n, setLang, getLang, t } from './i18n.js';
+
+// 初始化 i18n（在 DOM 就绪后应用）
+initI18n();
+
+// 语言切换器
+const langSelect = document.getElementById('lang-select');
+if (langSelect) {
+  langSelect.value = getLang();
+  langSelect.addEventListener('change', () => setLang(langSelect.value));
+}
 
 // 初始化组件与元素引用
 const epubHandler = new EpubHandler();
@@ -43,7 +54,7 @@ dropZone.addEventListener('drop', (e) => {
   if (files.length > 0 && files[0].name.toLowerCase().endsWith('.epub')) {
     handleFileSelect(files[0]);
   } else {
-    showToast('请选择有效的 .epub 文件！', 'error');
+    showToast(t('toast.invalidEpub'), 'error');
   }
 });
 
@@ -65,7 +76,7 @@ fileInput.addEventListener('change', (e) => {
 // 处理 EPUB 文件加载（arrayBuffer 形式）
 async function handleFileLoad(arrayBuffer, fileName, path) {
   try {
-    showToast('正在解析 EPUB 文件...', 'info');
+    showToast(t('toast.parsing'), 'info');
     const result = await epubHandler.load(arrayBuffer, fileName);
 
     currentMetadata = { ...result.metadata };
@@ -78,7 +89,7 @@ async function handleFileLoad(arrayBuffer, fileName, path) {
     updateCoverPreview(result.coverUrl);
 
     // 更新文件名展示与导出文件名输入框
-    fileNameDisplay.textContent = `文件: ${fileName}`;
+    fileNameDisplay.textContent = t('file.info', fileName);
     document.getElementById('input-filename').value = fileName;
 
     // 界面状态切换
@@ -86,10 +97,10 @@ async function handleFileLoad(arrayBuffer, fileName, path) {
     editorSection.classList.remove('hidden');
     headerActions.classList.remove('hidden');
 
-    showToast('解析成功！你可以开始编辑元数据。', 'success');
+    showToast(t('toast.parseSuccess'), 'success');
   } catch (err) {
     console.error(err);
-    showToast(`解析失败: ${err.message}`, 'error');
+    showToast(`${t('toast.parseFail')}: ${err.message}`, 'error');
   }
 }
 
@@ -119,7 +130,7 @@ async function openWithNativeDialog() {
     await handleFileLoad(data, fileName, path);
   } catch (err) {
     console.error(err);
-    showToast(`读取文件失败: ${err.message || err}`, 'error');
+    showToast(`${t('toast.readFail')}: ${err.message || err}`, 'error');
   }
 }
 
@@ -251,7 +262,7 @@ coverInput.addEventListener('change', (e) => {
     const coverFile = e.target.files[0];
     const previewUrl = epubHandler.setNewCover(coverFile);
     updateCoverPreview(previewUrl);
-    showToast('已更新封面预览，点击“保存”生效。', 'info');
+    showToast(t('toast.coverUpdated'), 'info');
   }
 });
 
@@ -267,14 +278,14 @@ btnReset.addEventListener('click', () => {
   snapshotForm(); // 记录当前状态以便撤销
   fillForm(currentMetadata);
   document.getElementById('input-filename').value = epubHandler.originalFileName;
-  showToast('已重置为初始提取的元数据和文件名。', 'info');
+  showToast(t('toast.reset'), 'info');
 });
 
 // 表单提交：导出修改后的 EPUB
 metadataForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   try {
-    showToast('正在打包导出 EPUB...', 'info');
+    showToast(t('toast.exporting'), 'info');
     const newMetadata = getFormValues();
     const newBlob = await epubHandler.save(newMetadata, settings.compressionLevel ?? 9);
 
@@ -307,7 +318,7 @@ metadataForm.addEventListener('submit', async (e) => {
       const { invoke } = await import('@tauri-apps/api/core');
       const bytes = new Uint8Array(await newBlob.arrayBuffer());
       await invoke('save_epub_file', { path, data: Array.from(bytes) });
-      showToast(`EPUB 文件已保存至: ${path}`, 'success');
+      showToast(t('toast.savedTo', path), 'success');
     } else {
       // Web 模式：浏览器下载
       const downloadUrl = URL.createObjectURL(newBlob);
@@ -318,11 +329,11 @@ metadataForm.addEventListener('submit', async (e) => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(downloadUrl);
-      showToast(`EPUB 文件 [${customFileName}] 导出成功！`, 'success');
+      showToast(t('toast.exportSuccess', customFileName), 'success');
     }
   } catch (err) {
     console.error(err);
-    showToast(`导出失败: ${err.message}`, 'error');
+    showToast(`${t('toast.exportFail')}: ${err.message}`, 'error');
   }
 });
 
@@ -371,7 +382,7 @@ function initUpdater() {
       btnStartUpdate.disabled = true;
       btnCancelUpdate.disabled = true;
       updateProgressContainer.classList.remove('hidden');
-      updateStatusText.textContent = '正在下载更新包...';
+      updateStatusText.textContent = t('update.statusDownloading');
 
       let downloadedBytes = 0;
       let totalBytes = 0;
@@ -380,7 +391,7 @@ function initUpdater() {
         switch (event.event) {
           case 'Started':
             totalBytes = event.data.contentLength || 0;
-            updateStatusText.textContent = '开始下载...';
+            updateStatusText.textContent = t('update.statusStarted');
             break;
           case 'Progress':
             downloadedBytes += event.data.chunkLength;
@@ -388,20 +399,20 @@ function initUpdater() {
               const percent = Math.floor((downloadedBytes / totalBytes) * 100);
               updateProgressBar.style.width = `${percent}%`;
               updatePercentText.textContent = `${percent}%`;
-              updateStatusText.textContent = `正在下载: ${(downloadedBytes / 1024 / 1024).toFixed(1)}MB / ${(totalBytes / 1024 / 1024).toFixed(1)}MB`;
+              updateStatusText.textContent = t('update.progressDownloading', (downloadedBytes / 1024 / 1024).toFixed(1), (totalBytes / 1024 / 1024).toFixed(1));
             } else {
-              updateStatusText.textContent = `已下载: ${(downloadedBytes / 1024 / 1024).toFixed(1)}MB`;
+              updateStatusText.textContent = t('update.progressDownloaded', (downloadedBytes / 1024 / 1024).toFixed(1));
             }
             break;
           case 'Finished':
             updateProgressBar.style.width = '100%';
             updatePercentText.textContent = '100%';
-            updateStatusText.textContent = '下载完成，正在准备安装重启...';
+            updateStatusText.textContent = t('update.statusFinished');
             break;
         }
       });
 
-      showToast('更新已安装完成，正在重启应用...', 'success');
+      showToast(t('toast.updateInstalled'), 'success');
 
       try {
         const { relaunch } = await import('@tauri-apps/plugin-process');
@@ -411,7 +422,7 @@ function initUpdater() {
       }
     } catch (err) {
       console.error('Update failed:', err);
-      showToast(`更新安装失败: ${err.message || err}`, 'error');
+      showToast(`${t('toast.updateInstallFail')}: ${err.message || err}`, 'error');
       btnStartUpdate.disabled = false;
       btnCancelUpdate.disabled = false;
     }
@@ -420,16 +431,16 @@ function initUpdater() {
   // 检查更新主逻辑
   async function checkForUpdates(manual = false) {
     if (manual) {
-      showToast('正在检查应用更新...', 'info');
+      showToast(t('toast.checkingUpdate'), 'info');
     }
     try {
       const { check } = await import('@tauri-apps/plugin-updater');
       const update = await check();
       if (update && update.available) {
         pendingUpdate = update;
-        updateCurrentVer.textContent = `当前版本 v${update.currentVersion || '0.1.0'}`;
-        updateLatestVer.textContent = `最新版本 v${update.version}`;
-        updateNotes.textContent = update.body || '包含最新性能优化与修复。';
+        updateCurrentVer.textContent = t('update.currentVer', update.currentVersion || '0.1.0');
+        updateLatestVer.textContent = t('update.latestVer', update.version);
+        updateNotes.textContent = update.body || t('update.notesFallback');
         updateProgressContainer.classList.add('hidden');
         updateProgressBar.style.width = '0%';
         updatePercentText.textContent = '0%';
@@ -438,13 +449,13 @@ function initUpdater() {
         updateModal.classList.remove('hidden');
       } else {
         if (manual) {
-          showToast('当前已是最新版本！', 'success');
+          showToast(t('toast.latest'), 'success');
         }
       }
     } catch (err) {
       console.warn('Check update fail:', err);
       if (manual) {
-        showToast(`检查更新失败: ${err.message || err}`, 'error');
+        showToast(`${t('toast.checkUpdateFail')}: ${err.message || err}`, 'error');
       }
     }
   }
@@ -483,7 +494,7 @@ function renderRecentMenu() {
   const list = getRecentFiles();
   menu.innerHTML = '';
   if (list.length === 0) {
-    menu.innerHTML = '<div class="recent-empty">暂无最近打开记录</div>';
+    menu.innerHTML = `<div class="recent-empty">${t('recent.empty')}</div>`;
     return;
   }
   list.forEach(f => {
@@ -504,7 +515,7 @@ async function reopenRecent(path) {
     const fileName = path.split(/[\\/]/).pop() || 'book.epub';
     await handleFileLoad(data, fileName, path);
   } catch (err) {
-    showToast(`读取失败: ${err.message || err}`, 'error');
+    showToast(`${t('toast.readFail')}: ${err.message || err}`, 'error');
   }
 }
 
@@ -558,11 +569,11 @@ function initSettings() {
     settings.exportDir = dirInput.value.trim() || null;
     saveSettings();
     close();
-    showToast('设置已保存。', 'success');
+    showToast(t('toast.settingsSaved'), 'success');
   });
   btnPickDir?.addEventListener('click', async () => {
     if (!isTauri) {
-      showToast('原生目录选择仅在桌面版可用。', 'info');
+      showToast(t('toast.dirNativeOnly'), 'info');
       return;
     }
     const { open } = await import('@tauri-apps/plugin-dialog');

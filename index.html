@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MetaEpub - EPUB元数据编辑器</title>
+  <title data-i18n="app.title">MetaEpub - EPUB 元数据编辑器</title>
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
@@ -15,15 +15,19 @@
     </div>
     <div class="header-right">
       <div id="header-actions" class="hidden">
-        <button class="btn-secondary" id="btn-open-new">打开其他电子书</button>
+        <button class="btn-secondary" id="btn-open-new" data-i18n="app.openOther">打开其他电子书</button>
       </div>
       <div class="recent-dropdown" id="recent-dropdown">
-        <button class="btn-secondary" id="btn-recent">🕘 最近打开</button>
+        <button class="btn-secondary" id="btn-recent" data-i18n="app.recent">🕘 最近打开</button>
         <div class="recent-menu hidden" id="recent-menu"></div>
       </div>
-      <button class="btn-secondary" id="btn-settings">⚙️ 设置</button>
-      <button class="btn-secondary" id="btn-check-update">✨ 检查更新</button>
-      <button class="btn-secondary" id="btn-about">ℹ️ 关于</button>
+      <select id="lang-select" class="lang-select" title="Language">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
+      <button class="btn-secondary" id="btn-settings" data-i18n="app.settings">⚙️ 设置</button>
+      <button class="btn-secondary" id="btn-check-update" data-i18n="app.checkUpdate">✨ 检查更新</button>
+      <button class="btn-secondary" id="btn-about" data-i18n="app.about">ℹ️ 关于</button>
     </div>
   </header>
 
@@ -31,8 +35,8 @@
     <!-- 空状态：拖拽/选择文件 -->
     <div id="drop-zone" class="drop-zone">
       <div class="drop-icon">📖</div>
-      <div class="drop-title">拖拽 EPUB 文件到此处</div>
-      <div class="drop-subtitle">或者点击此处选择电脑中的 .epub 电子书</div>
+      <div class="drop-title" data-i18n="drop.title">拖拽 EPUB 文件到此处</div>
+      <div class="drop-subtitle" data-i18n="drop.subtitle">或者点击此处选择电脑中的 .epub 电子书</div>
     </div>
 
     <!-- 编辑器区域 (默认隐藏) -->
@@ -40,11 +44,11 @@
       <!-- 左侧：封面与文件信息 -->
       <div class="card sidebar-section">
         <div class="cover-wrapper" id="cover-wrapper">
-          <div class="cover-placeholder" id="cover-placeholder">暂无封面</div>
-          <img id="cover-img" class="hidden" alt="封面预览">
+          <div class="cover-placeholder" id="cover-placeholder" data-i18n="cover.placeholder">暂无封面</div>
+          <img id="cover-img" class="hidden" alt="封面预览" data-i18n-alt="cover.alt">
         </div>
-        <button class="btn-secondary" id="btn-change-cover">更换封面图片</button>
-        <div class="file-info" id="file-name-display">文件名: -</div>
+        <button class="btn-secondary" id="btn-change-cover" data-i18n="cover.change">更换封面图片</button>
+        <div class="file-info" id="file-name-display" data-i18n="file.infoInitial">文件: -</div>
       </div>
 
       <!-- 右侧：元数据表单 -->
@@ -52,81 +56,81 @@
         <form id="metadata-form">
           <div class="form-grid">
             <div class="form-group full-width">
-              <label for="input-title">书名 (Title)</label>
-              <input type="text" id="input-title" placeholder="例如：三体">
+              <label for="input-title" data-i18n="label.title">书名 (Title)</label>
+              <input type="text" id="input-title" data-i18n-placeholder="ph.title" placeholder="例如：三体">
             </div>
 
             <div class="form-group">
-              <label for="input-creator">作者 (Author)</label>
-              <input type="text" id="input-creator" placeholder="例如：刘慈欣">
+              <label for="input-creator" data-i18n="label.creator">作者 (Author)</label>
+              <input type="text" id="input-creator" data-i18n-placeholder="ph.creator" placeholder="例如：刘慈欣">
             </div>
 
             <div class="form-group">
-              <label for="input-language">语言 (Language)</label>
-              <input type="text" id="input-language" placeholder="例如：zh-CN / en">
+              <label for="input-language" data-i18n="label.language">语言 (Language)</label>
+              <input type="text" id="input-language" data-i18n-placeholder="ph.language" placeholder="例如：zh-CN / en">
             </div>
 
             <div class="form-group">
-              <label for="input-publisher">出版商 (Publisher)</label>
-              <input type="text" id="input-publisher" placeholder="例如：重庆出版社">
+              <label for="input-publisher" data-i18n="label.publisher">出版商 (Publisher)</label>
+              <input type="text" id="input-publisher" data-i18n-placeholder="ph.publisher" placeholder="例如：重庆出版社">
             </div>
 
             <div class="form-group">
-              <label for="input-date">出版日期 (Date)</label>
-              <input type="text" id="input-date" placeholder="例如：2008-01-01">
+              <label for="input-date" data-i18n="label.date">出版日期 (Date)</label>
+              <input type="text" id="input-date" data-i18n-placeholder="ph.date" placeholder="例如：2008-01-01">
             </div>
 
             <div class="form-group full-width">
-              <label for="input-identifier">标识符 (ISBN / UUID)</label>
-              <input type="text" id="input-identifier" placeholder="例如：9787536692930">
+              <label for="input-identifier" data-i18n="label.identifier">标识符 (ISBN / UUID)</label>
+              <input type="text" id="input-identifier" data-i18n-placeholder="ph.identifier" placeholder="例如：9787536692930">
             </div>
 
             <div class="form-group full-width">
-              <label for="input-description">书籍简介 / 描述 (Description)</label>
-              <textarea id="input-description" placeholder="请输入电子书的简介或描述内容..."></textarea>
+              <label for="input-description" data-i18n="label.description">书籍简介 / 描述 (Description)</label>
+              <textarea id="input-description" data-i18n-placeholder="ph.description" placeholder="请输入电子书的简介或描述内容..."></textarea>
             </div>
 
             <div class="form-group full-width">
-              <label for="input-subject">分类 (Subject)</label>
-              <input type="text" id="input-subject" placeholder="例如：科幻小说">
+              <label for="input-subject" data-i18n="label.subject">分类 (Subject)</label>
+              <input type="text" id="input-subject" data-i18n-placeholder="ph.subject" placeholder="例如：科幻小说">
             </div>
 
             <div class="form-group">
-              <label for="input-contributor">其他贡献者 (Contributor)</label>
-              <input type="text" id="input-contributor" placeholder="例如：译者、插图作者">
+              <label for="input-contributor" data-i18n="label.contributor">其他贡献者 (Contributor)</label>
+              <input type="text" id="input-contributor" data-i18n-placeholder="ph.contributor" placeholder="例如：译者、插图作者">
             </div>
 
             <div class="form-group">
-              <label for="input-rights">版权 (Rights)</label>
-              <input type="text" id="input-rights" placeholder="例如：© 2026 某出版社">
+              <label for="input-rights" data-i18n="label.rights">版权 (Rights)</label>
+              <input type="text" id="input-rights" data-i18n-placeholder="ph.rights" placeholder="例如：© 2026 某出版社">
             </div>
 
             <div class="form-group">
-              <label for="input-source">来源 (Source)</label>
-              <input type="text" id="input-source" placeholder="例如：https://...">
+              <label for="input-source" data-i18n="label.source">来源 (Source)</label>
+              <input type="text" id="input-source" data-i18n-placeholder="ph.source" placeholder="例如：https://...">
             </div>
 
             <div class="form-group">
-              <label for="input-series">丛书系列 (Series)</label>
-              <input type="text" id="input-series" placeholder="例如：三体系列">
+              <label for="input-series" data-i18n="label.series">丛书系列 (Series)</label>
+              <input type="text" id="input-series" data-i18n-placeholder="ph.series" placeholder="例如：三体系列">
             </div>
 
             <div class="form-group">
-              <label for="input-series-index">系列序号 (Series Index)</label>
-              <input type="text" id="input-series-index" placeholder="例如：1">
+              <label for="input-series-index" data-i18n="label.seriesIndex">系列序号 (Series Index)</label>
+              <input type="text" id="input-series-index" data-i18n-placeholder="ph.seriesIndex" placeholder="例如：1">
             </div>
 
             <div class="form-group full-width">
-              <label for="input-filename">导出文件名 (Export Filename)</label>
-              <input type="text" id="input-filename" placeholder="例如：my_book.epub">
+              <label for="input-filename" data-i18n="label.filename">导出文件名 (Export Filename)</label>
+              <input type="text" id="input-filename" data-i18n-placeholder="ph.filename" placeholder="例如：my_book.epub">
             </div>
           </div>
 
           <div class="actions-bar">
-            <button type="button" class="btn-secondary" id="btn-undo" disabled>撤销</button>
-            <button type="button" class="btn-secondary" id="btn-redo" disabled>重做</button>
-            <button type="button" class="btn-secondary" id="btn-reset">重置修改</button>
-            <button type="submit" class="btn-primary" id="btn-save">保存并导出 EPUB</button>
+            <button type="button" class="btn-secondary" id="btn-undo" disabled data-i18n="action.undo">撤销</button>
+            <button type="button" class="btn-secondary" id="btn-redo" disabled data-i18n="action.redo">重做</button>
+            <button type="button" class="btn-secondary" id="btn-reset" data-i18n="action.reset">重置修改</button>
+            <button type="submit" class="btn-primary" id="btn-save" data-i18n="action.save">保存并导出 EPUB</button>
           </div>
         </form>
       </div>
@@ -141,7 +145,7 @@
   <div id="update-modal" class="modal-backdrop hidden">
     <div class="modal-card">
       <div class="modal-header">
-        <div class="modal-title">🚀 发现新版本</div>
+        <div class="modal-title" data-i18n="update.title">🚀 发现新版本</div>
         <button id="btn-close-update-modal" class="modal-close-btn">&times;</button>
       </div>
       <div class="modal-body">
@@ -150,13 +154,13 @@
           <span class="version-arrow">➔</span>
           <span class="version-badge latest" id="update-latest-ver">v0.2.0</span>
         </div>
-        <div class="update-notes-title">更新说明：</div>
-        <div class="update-notes-content" id="update-notes">解析版本日志中...</div>
-        
+        <div class="update-notes-title" data-i18n="update.notesTitle">更新说明：</div>
+        <div class="update-notes-content" id="update-notes" data-i18n="update.notesLoading">解析版本日志中...</div>
+
         <!-- 下载进度区域 (默认隐藏) -->
         <div id="update-progress-container" class="update-progress-container hidden">
           <div class="progress-info">
-            <span id="update-status-text">正在准备下载...</span>
+            <span id="update-status-text" data-i18n="update.statusPreparing">正在准备下载...</span>
             <span id="update-percent-text">0%</span>
           </div>
           <div class="progress-bar-bg">
@@ -165,8 +169,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary" id="btn-cancel-update">稍后再说</button>
-        <button class="btn-primary" id="btn-start-update">立即升级</button>
+        <button class="btn-secondary" id="btn-cancel-update" data-i18n="update.cancel">稍后再说</button>
+        <button class="btn-primary" id="btn-start-update" data-i18n="update.start">立即升级</button>
       </div>
     </div>
   </div>
@@ -175,7 +179,7 @@
   <div id="about-modal" class="modal-backdrop hidden">
     <div class="modal-card about-card">
       <div class="modal-header">
-        <div class="modal-title">关于 MetaEpub</div>
+        <div class="modal-title" data-i18n="about.title">关于 MetaEpub</div>
         <button id="btn-close-about-modal" class="modal-close-btn">&times;</button>
       </div>
       <div class="modal-body about-body">
@@ -184,7 +188,7 @@
           <div class="about-app-name">MetaEpub</div>
           <span class="about-app-version">v0.2.3</span>
         </div>
-        <p class="about-description">
+        <p class="about-description" data-i18n="about.description">
           MetaEpub 是一款轻量、现代化的 EPUB 电子书元数据编辑器。支持便捷修改书名、作者、语言、出版商、出版日期、描述信息与标识符，并支持在线替换封面与离线导出打包。
         </p>
         <div class="about-tags">
@@ -195,17 +199,17 @@
         </div>
         <div class="about-meta-list">
           <div class="about-meta-item">
-            <span class="about-meta-label">开源项目：</span>
+            <span class="about-meta-label" data-i18n="about.repo">开源项目：</span>
             <a href="https://github.com/mangerle/MetaEpub" id="about-repo-link" class="about-link" target="_blank">github.com/mangerle/MetaEpub</a>
           </div>
           <div class="about-meta-item">
-            <span class="about-meta-label">运行环境：</span>
-            <span id="about-env-text">Tauri 桌面客户端 (Windows / macOS / Linux)</span>
+            <span class="about-meta-label" data-i18n="about.env">运行环境：</span>
+            <span id="about-env-text" data-i18n="about.envText">Tauri 桌面客户端 (Windows / macOS / Linux)</span>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn-primary" id="btn-confirm-about">确定</button>
+        <button class="btn-primary" id="btn-confirm-about" data-i18n="about.confirm">确定</button>
       </div>
     </div>
   </div>
@@ -214,31 +218,31 @@
   <div id="settings-modal" class="modal-backdrop hidden">
     <div class="modal-card">
       <div class="modal-header">
-        <div class="modal-title">⚙️ 设置</div>
+        <div class="modal-title" data-i18n="settings.title">⚙️ 设置</div>
         <button id="btn-close-settings-modal" class="modal-close-btn">&times;</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label for="input-compression">压缩级别（0-9，越大文件越小但导出越慢）</label>
+          <label for="input-compression" data-i18n="settings.compression">压缩级别（0-9，越大文件越小但导出越慢）</label>
           <select id="input-compression">
-            <option value="0">0 - 不压缩（最快）</option>
-            <option value="1">1 - 低压缩</option>
-            <option value="3">3 - 中低压缩</option>
-            <option value="5">5 - 中等压缩（推荐）</option>
-            <option value="7">7 - 高压缩</option>
-            <option value="9">9 - 最大压缩（最慢）</option>
+            <option value="0" data-i18n="settings.comp0">0 - 不压缩（最快）</option>
+            <option value="1" data-i18n="settings.comp1">1 - 低压缩</option>
+            <option value="3" data-i18n="settings.comp3">3 - 中低压缩</option>
+            <option value="5" data-i18n="settings.comp5">5 - 中等压缩（推荐）</option>
+            <option value="7" data-i18n="settings.comp7">7 - 高压缩</option>
+            <option value="9" data-i18n="settings.comp9">9 - 最大压缩（最慢）</option>
           </select>
         </div>
         <div class="form-group">
-          <label for="input-export-dir">默认导出目录</label>
+          <label for="input-export-dir" data-i18n="settings.exportDir">默认导出目录</label>
           <div class="setting-row">
-            <input type="text" id="input-export-dir" readonly placeholder="未设置（使用系统默认）">
-            <button type="button" class="btn-secondary" id="btn-pick-dir">选择</button>
+            <input type="text" id="input-export-dir" readonly data-i18n-placeholder="settings.exportDirPlaceholder" placeholder="未设置（使用系统默认）">
+            <button type="button" class="btn-secondary" id="btn-pick-dir" data-i18n="settings.pick">选择</button>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn-primary" id="btn-confirm-settings">确定</button>
+        <button class="btn-primary" id="btn-confirm-settings" data-i18n="settings.confirm">确定</button>
       </div>
     </div>
   </div>
